@@ -79,22 +79,26 @@ app.post('/robot/create', (request, responce) => {
 })
 
 app.ws('/robot/status', (ws) => {
+    function sendData(data) {
+        ws.send(JSON.stringify(data));
+    }
+
     function sendState(state) {
-        ws.send({
+        sendData({
             'type': 'new_state',
             'state': state,
         });
     }
 
     function sendInfo(info) {
-        ws.send({
+        sendData({
             'type': 'info',
             'info': info
         });
     }
 
     function sendError(error) {
-        ws.send({
+        sendData({
             'type': 'error',
             'error': error,
         });
@@ -104,7 +108,7 @@ app.ws('/robot/status', (ws) => {
     var inited = false;
     var movingAngle = generateRandom(0, 360);
 
-    const status = undefined;
+    var status = undefined;
     const intervalId = setInterval(() => {
         if (status) {
             if (status.temperature >= TEMPERATURE_MAX && isRunning) {
@@ -122,6 +126,7 @@ app.ws('/robot/status', (ws) => {
                 // Speed 5-10 use 1% battery each second
                 // 10-15 use 2% battery each second
                 status.battery = clamp(status.battery - Math.floor(status.speed / 5), 0, 100);
+                status.temperature = clamp(status.temperature + Math.floor(status.speed / 5), TEMPERATURE_MIN, TEMPERATURE_MAX);
 
                 // lets say our speed is units per minute our robot is moving
                 const speedPerSecond = status.speed / 60;
@@ -130,8 +135,8 @@ app.ws('/robot/status', (ws) => {
 
                 //Even though it wasn't specified in task i really want  
                 //to make robot movement kinda of realistic 
-                robotState.position.x = (robotState.position.x + deltaX + FIELD_SIZE_X) % FIELD_SIZE_X;
-                robotState.position.y = (robotState.position.y + deltaY + FIELD_SIZE_Y) % FIELD_SIZE_Y;
+                status.position.x = (status.position.x + deltaX + FIELD_SIZE_X) % FIELD_SIZE_X;
+                status.position.y = (status.position.y + deltaY + FIELD_SIZE_Y) % FIELD_SIZE_Y;
             } else {
                 status.battery = clamp(status.battery + 1, 0, 100);
                 status.temperature = clamp(status.temperature - 1, TEMPERATURE_MIN, TEMPERATURE_MAX);
@@ -144,6 +149,7 @@ app.ws('/robot/status', (ws) => {
     ws.on('message', (message) => {
         try {
             const command = JSON.parse(message);
+            console.log(command);
 
             if (command.type != 'robot_init' && !inited) {
                 sendError('Please, init the robot');
@@ -161,6 +167,7 @@ app.ws('/robot/status', (ws) => {
                             status = sessions[command.uid];
                             inited = true;
                             sessions[command.uid] = undefined;
+                            sendInfo('Success');
                             return;
                         } else {
                             sendError('Session is invalid');
@@ -184,7 +191,9 @@ app.ws('/robot/status', (ws) => {
                     status.speed = clamp(command.value, 0, SPEED_MAX);
                     break;
             }
-        } catch (e) { }
+        } catch (e) {
+            sendError(e.toString());
+        }
     });
 
     ws.on('close', () => {
