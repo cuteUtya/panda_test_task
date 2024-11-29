@@ -24,6 +24,7 @@ function createRobot(defaultPosition, defaultSpeed) {
         speed: defaultSpeed ?? generateRandom(1, 10),
         battery: 100,
         temperature: TEMPERATURE_MIN,
+        isActive: false,
     };
 }
 
@@ -104,24 +105,23 @@ app.ws('/robot/status', (ws) => {
         });
     }
 
-    var isRunning = false;
     var inited = false;
     var movingAngle = generateRandom(0, 360);
 
     var status = undefined;
     const intervalId = setInterval(() => {
         if (status) {
-            if (status.temperature >= TEMPERATURE_MAX && isRunning) {
-                isRunning = false;
+            if (status.temperature >= TEMPERATURE_MAX && status.isActive) {
+                status.isActive = false;
                 sendInfo('Robot was stopped due to overheating');
             }
 
-            if (status.battery <= 0 && isRunning) {
-                isRunning = false;
+            if (status.battery <= 0 && status.isActive) {
+                status.isActive = false;
                 sendInfo('Robot was stopped due to low power');
             }
 
-            if (isRunning) {
+            if (status.isActive) {
                 // Speed under 5 does not use battery
                 // Speed 5-10 use 1% battery each second
                 // 10-15 use 2% battery each second
@@ -180,11 +180,11 @@ app.ws('/robot/status', (ws) => {
                     break;
 
                 case 'robot_start':
-                    isRunning = true;
+                    status.isActive = true;
                     break;
 
                 case 'robot_stop':
-                    isRunning = false;
+                    status.isActive = false;
                     break;
 
                 case 'robot_change_speed':
