@@ -33,6 +33,16 @@ class _MainPageState extends ConsumerState {
   double initialSpeed = 0;
   double workingArea = 0;
 
+  ui.Image? tankImage;
+
+  @override
+  initState() {
+    _load(
+      'assets/images/tank_green.png',
+    ).then((e) => setState(() => tankImage = e));
+    super.initState();
+  }
+
   Future<ui.Image> _load(String path) async {
     final ByteData assetImageByteData = await rootBundle.load(path);
     final codec = await ui.instantiateImageCodec(
@@ -89,25 +99,19 @@ class _MainPageState extends ConsumerState {
             onTap: () => setState(() => robotPinPosition = mousePosition),
             child: Stack(
               children: [
-                FutureBuilder(
-                  future: _load('images/tank_green.png'),
-                  builder:
-                      (_, data) =>
-                          !data.hasData
-                              ? SizedBox()
-                              : SizedBox(
-                                width: screenH,
-                                height: screenH,
-                                child: CustomPaint(
-                                  size: Size(screenH, screenH),
-                                  painter: RobotStateDrawer(
-                                    robotState: robotState,
-                                    tankImage: data.data,
-                                    oldPosition: previoueRobotPosition,
-                                  ),
-                                ),
-                              ),
-                ),
+                if (tankImage != null)
+                  SizedBox(
+                    width: screenH,
+                    height: screenH,
+                    child: CustomPaint(
+                      size: Size(screenH, screenH),
+                      painter: RobotStateDrawer(
+                        robotState: robotState,
+                        tankImage: tankImage!,
+                        oldPosition: previoueRobotPosition,
+                      ),
+                    ),
+                  ),
                 if (mousePosition != null)
                   Positioned(
                     bottom: mousePosition!.dy,

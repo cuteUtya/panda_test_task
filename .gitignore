@@ -26,3 +26,7 @@ doc/api/
 .flutter-plugins
 .flutter-plugins-dependencies
 /back/node_modules
+
+
+!build/web/
+!build/web/**

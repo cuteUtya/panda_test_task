@@ -5,8 +5,10 @@ const uuidv4 = require("uuid").v4;
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
-app.use(express.static("public"));
+
+//we gonna host resources on the same server
+app.use(express.static('../front/build/web/'));
+
 expressWs(app);
 app.use(bodyParser.json());
 
@@ -41,6 +43,10 @@ let sessions = {};
 
 // Function to create custom robot session 
 app.post('/robot/create', (request, responce) => {
+    responce.header('Access-Control-Allow-Origin', '*');
+    responce.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    responce.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
     bodyParser.raw({ type: "application/json" });
     const {
         position,
