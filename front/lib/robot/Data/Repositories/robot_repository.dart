@@ -32,6 +32,10 @@ class RobotRepository {
     return _datasource.getMessagesStream();
   }
 
+  void dispose() {
+    _datasource.dispose();
+  }
+
   Future<RobotSession> createRobot({Offset? position, double? speed}) =>
       _datasource.createRobot(position: position, speed: speed);
 }

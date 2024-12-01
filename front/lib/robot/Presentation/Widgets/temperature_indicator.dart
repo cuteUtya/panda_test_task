@@ -42,7 +42,7 @@ class TemperatureIndicator extends StatelessWidget {
 class SquareSliderThumbShape extends SliderComponentShape {
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size(4, 30);
+    return Size(20, 20);
   }
 
   @override

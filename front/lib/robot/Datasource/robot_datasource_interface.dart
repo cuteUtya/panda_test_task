@@ -8,4 +8,5 @@ abstract class RobotDatasourceInterface {
   Future<void> sendCommand(RobotCommand command);
   Future<Stream<RobotMessage>> getMessagesStream();
   Future<RobotSession> createRobot({Offset? position, double? speed});
+  void dispose();
 }

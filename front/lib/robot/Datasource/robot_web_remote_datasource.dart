@@ -49,4 +49,9 @@ class RobotWebRemoteDatasource implements RobotDatasourceInterface {
 
     return RobotSession(request.data);
   }
+
+  @override
+  void dispose() {
+    ws.sink.close();
+  }
 }

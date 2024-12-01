@@ -139,7 +139,7 @@ app.ws('/robot/status', (ws) => {
                 status.position.x = (status.position.x + deltaX + FIELD_SIZE_X) % FIELD_SIZE_X;
                 status.position.y = (status.position.y + deltaY + FIELD_SIZE_Y) % FIELD_SIZE_Y;
             } else {
-                status.battery = clamp(status.battery + 1, 0, 100);
+                status.battery = clamp(status.battery + 0.5, 0, 100);
                 status.temperature = clamp(status.temperature - 1, TEMPERATURE_MIN, TEMPERATURE_MAX);
             }
 

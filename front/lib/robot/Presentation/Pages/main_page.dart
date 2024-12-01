@@ -20,19 +20,16 @@ class MainPage extends ConsumerStatefulWidget {
 }
 
 class _MainPageState extends ConsumerState {
+  MainPageStateMachine inputState = MainPageStateMachine.waitingForUserOptions;
+
   Offset? mousePosition;
   Offset? robotPinPosition;
-
-  Offset? oldPosition;
-
-  MainPageStateMachine inputState = MainPageStateMachine.waitingForUserOptions;
 
   StateNotifierProvider<RobotController, RobotState?>?
   currentRobotStateProvider;
   RobotState? robotState;
 
   double initialSpeed = 0;
-
   double workingArea = 0;
 
   Future<ui.Image> _load(String path) async {
@@ -58,10 +55,20 @@ class _MainPageState extends ConsumerState {
   }
 
   @override
+  void dispose() {
+    if (currentRobotStateProvider != null) {
+      ref.read(currentRobotStateProvider!.notifier).dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    Offset? previoueRobotPosition;
+
     if (currentRobotStateProvider != null) {
       ref.listen(currentRobotStateProvider!, (oldState, newState) {
-        oldPosition = oldState?.position;
+        previoueRobotPosition = oldState?.position;
         setState(() => robotState = newState);
       });
     }
@@ -97,7 +104,7 @@ class _MainPageState extends ConsumerState {
                                   painter: RobotStateDrawer(
                                     robotState: robotState,
                                     tankImage: data.data,
-                                    oldPosition: oldPosition,
+                                    oldPosition: previoueRobotPosition,
                                   ),
                                 ),
                               ),
