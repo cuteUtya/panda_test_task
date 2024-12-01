@@ -13,6 +13,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class RobotWebRemoteDatasource implements RobotDatasourceInterface {
   late WebSocketChannel ws;
   late Future<void> _connectionCompleter;
+  Completer<void> _initCompleted = Completer();
 
   RobotWebRemoteDatasource() {
     _connect();

@@ -153,7 +153,6 @@ app.ws('/robot/status', (ws) => {
             console.log(command);
 
             if (command.type != 'robot_init' && !inited) {
-                sendError('Please, init the robot');
                 return;
             }
             switch (command.type) {
@@ -168,7 +167,7 @@ app.ws('/robot/status', (ws) => {
                             status = sessions[command.uid];
                             inited = true;
                             sessions[command.uid] = undefined;
-                            sendInfo('Success');
+                            sendInfo('Robot succesfully created');
                             return;
                         } else {
                             sendError('Session is invalid');
@@ -178,18 +177,22 @@ app.ws('/robot/status', (ws) => {
                     //Create default robot
                     status = createRobot();
                     inited = true;
+                    sendInfo('Robot succesfully created');
                     break;
 
                 case 'robot_start':
                     status.isActive = true;
+                    sendInfo('Robot started');
                     break;
 
                 case 'robot_stop':
                     status.isActive = false;
+                    sendInfo('Robot stopped');
                     break;
 
                 case 'robot_change_speed':
                     status.speed = clamp(command.value, 0, SPEED_MAX);
+                    sendInfo('Speed succesfully changed');
                     break;
             }
         } catch (e) {
