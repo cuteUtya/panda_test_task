@@ -37,9 +37,7 @@ class _MainPageState extends ConsumerState {
 
   @override
   initState() {
-    _load(
-      'assets/images/tank_green.png',
-    ).then((e) => setState(() => tankImage = e));
+    _load('images/tank_green.png').then((e) => setState(() => tankImage = e));
     super.initState();
   }
 
