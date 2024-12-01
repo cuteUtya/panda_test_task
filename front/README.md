@@ -1,4 +1,4 @@
-# Robot Repository
+# Robot Flutter Frontend
 
 ## Features
 - Platform-specific robot datasource management
@@ -7,18 +7,23 @@
 - Stream-based message handling
 
 ## Architecture
-- `RobotRepository`: Central management class
-- Supports web platform datasource
-- Throws exception for unsupported platforms
+This repository follows the principles of clean architecture, ensuring separation of concerns and scalability. Here's the directory structure and key components:
+### 1. Data layer
+Model
+Handles the robot's data and communication with external sources
+- `RobotCommand`: Command structures for robot actions
+- `RobotMessages`: Handles incoming robot communication
+- `RobotSession`: Represents a robot session
+- `RobotState`: Represent robot state
 
-## Key Methods
-- `summonRobot()`: Initialize robot session
-- `sendMessage()`: Send robot commands
-- `getMessagesStream()`: Receive robot messages
-- `createRobot()`: Create new robot session
-- `dispose()`: Clean up resources
+Repository
+- `RobotRepository`: Acts as the central interface for managing robot data and delegating tasks to the appropriate datasource
 
+Datasource
+- `RobotDataSourceInterface`: Abstracts data operations
+- `RobotWebRemoteDatasource`: Implements the interface for WebSocket-based communication
 
-## Platform Support
-- Web ✓
-- Others ✗ (Unsupported)
+### 2. Presentation Layer
+Providers 
+- `RobotProvider`: A `StateNotifier` from `flutter_riverpod` to manage and expose the robot's state
+
