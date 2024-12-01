@@ -2,6 +2,8 @@
 
 ## Overview
 Web-based robot simulation application with frontend and backend components.
+![image](https://github.com/user-attachments/assets/b75d2d51-1f13-4bcd-b43b-1d4476cee6b5)
+
 
 ## Live Demo
 - **Hosted App**: [http://35.209.217.132:3000/index.html](http://35.209.217.132:3000/index.html)
