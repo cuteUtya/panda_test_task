@@ -136,7 +136,6 @@ app.ws('/robot/status', (ws) => {
                 status.battery = clamp(status.battery - Math.floor(status.speed / 50), 0, 100);
                 status.temperature = clamp(status.temperature + Math.floor(status.speed / 50), TEMPERATURE_MIN, TEMPERATURE_MAX);
 
-                // lets say our speed is units per minute our robot is moving
                 const speedPerSecond = status.speed / 60;
                 const deltaX = speedPerSecond * Math.sin(movingAngle * 3.14 / 180);
                 const deltaY = speedPerSecond * Math.cos(movingAngle * 3.14 / 180);
