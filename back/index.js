@@ -23,16 +23,16 @@ function createRobot(defaultPosition, defaultSpeed) {
             x: 50,
             y: 50,
         },
-        speed: defaultSpeed ?? generateRandom(1, 10),
+        speed: defaultSpeed ?? generateRandom(40, 100),
         battery: 100,
         temperature: TEMPERATURE_MIN,
-        isActive: false,
+        isActive: true,
     };
 }
 
 const FIELD_SIZE_X = 100;
 const FIELD_SIZE_Y = 100;
-const SPEED_MAX = 15;
+const SPEED_MAX = 200;
 const TEMPERATURE_MAX = 100;
 const TEMPERATURE_MIN = 25;
 
@@ -108,9 +108,9 @@ app.ws('/robot/status', (ws) => {
     }
 
     var inited = false;
-    var movingAngle = generateRandom(0, 360);
 
     var status = undefined;
+    var movingAngle = [0, 180, 90][Math.floor(generateRandom(0, 2))];
     const intervalId = setInterval(() => {
         if (status) {
             if (status.temperature >= TEMPERATURE_MAX && status.isActive) {
@@ -124,16 +124,15 @@ app.ws('/robot/status', (ws) => {
             }
 
             if (status.isActive) {
-                // Speed under 5 does not use battery
-                // Speed 5-10 use 1% battery each second
-                // 10-15 use 2% battery each second
-                status.battery = clamp(status.battery - Math.floor(status.speed / 5), 0, 100);
-                status.temperature = clamp(status.temperature + Math.floor(status.speed / 5), TEMPERATURE_MIN, TEMPERATURE_MAX);
+                movingAngle += [12.25, 0, -12.25][Math.floor(generateRandom(0, 3))];
+
+                status.battery = clamp(status.battery - Math.floor(status.speed / 50), 0, 100);
+                status.temperature = clamp(status.temperature + Math.floor(status.speed / 50), TEMPERATURE_MIN, TEMPERATURE_MAX);
 
                 // lets say our speed is units per minute our robot is moving
                 const speedPerSecond = status.speed / 60;
-                const deltaX = speedPerSecond * Math.cos(movingAngle);
-                const deltaY = speedPerSecond * Math.sin(movingAngle);
+                const deltaX = speedPerSecond * Math.sin(movingAngle * 3.14 / 180);
+                const deltaY = speedPerSecond * Math.cos(movingAngle * 3.14 / 180);
 
                 //Even though it wasn't specified in task i really want  
                 //to make robot movement kinda of realistic 

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:panda_test_task/robot/Data/Model/robot_command.dart';
 import 'package:panda_test_task/robot/Data/Model/robot_messages.dart';
 import 'package:panda_test_task/robot/Data/Model/robot_state.dart';
 import 'package:panda_test_task/robot/Data/Repositories/robot_repository.dart';
@@ -41,12 +42,18 @@ class RobotController extends StateNotifier<RobotState?> {
       }
     });
   }
+
+  void sendCommand(RobotCommand cmd) {
+    _repo.sendMessage(cmd);
+  }
 }
 
-robotProvider({double? defaultSpeed, Offset? defaultPosition}) =>
-    StateNotifierProvider<RobotController, RobotState?>(
-      (ref) => RobotController(
-        defaultPosition: defaultPosition,
-        defaultSpeed: defaultSpeed,
-      ),
-    );
+StateNotifierProvider<RobotController, RobotState?> robotProvider({
+  double? defaultSpeed,
+  Offset? defaultPosition,
+}) => StateNotifierProvider<RobotController, RobotState?>(
+  (ref) => RobotController(
+    defaultPosition: defaultPosition,
+    defaultSpeed: defaultSpeed,
+  ),
+);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -9,7 +10,6 @@ import 'package:panda_test_task/robot/Datasource/robot_web_remote_datasource.dar
 
 class RobotRepository {
   late RobotDatasourceInterface _datasource;
-  var _init = false;
 
   RobotRepository() {
     if (kIsWeb) {
@@ -22,16 +22,13 @@ class RobotRepository {
 
   Future<void> summonRobot({RobotSession? robot}) async {
     await _datasource.sendCommand(RobotCommandInit(uid: robot?.id));
-    _init = false;
   }
 
   void sendMessage(RobotCommand command) {
-    if (!_init) throw Exception('There no robot yet');
     _datasource.sendCommand(command);
   }
 
   Future<Stream<RobotMessage>> getMessagesStream() {
-    if (!_init) throw Exception('There no robot yet');
     return _datasource.getMessagesStream();
   }
 
