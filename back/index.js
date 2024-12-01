@@ -5,8 +5,10 @@ const uuidv4 = require("uuid").v4;
 const cors = require('cors');
 
 const app = express();
-app.use(cors({ origin: 'https://test-app-834eb.web.app' }));
-app.use(express.static("public"));
+
+//we gonna host resources on the same server
+app.use(express.static('../front/build/web/'));
+
 expressWs(app);
 app.use(bodyParser.json());
 
