@@ -1,13 +1,15 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:panda_test_task/robot/Data/Model/robot_command.dart';
 import 'package:panda_test_task/robot/Data/Model/robot_state.dart';
 import 'package:panda_test_task/robot/Presentation/Providers/robot_provider.dart';
+import 'package:panda_test_task/robot/Presentation/Widgets/context_tooltip.dart';
+import 'package:panda_test_task/robot/Presentation/Widgets/robot_state_drawer.dart';
 
 import 'dart:ui' as ui;
+
+import 'package:panda_test_task/robot/Presentation/Widgets/temperature_indicator.dart';
 
 class MainPage extends ConsumerStatefulWidget {
   const MainPage({super.key});
@@ -30,10 +32,7 @@ class _MainPageState extends ConsumerState {
 
   double initialSpeed = 0;
 
-  @override
-  void initState() {
-    super.initState();
-  }
+  double workingArea = 0;
 
   Future<ui.Image> _load(String path) async {
     final ByteData assetImageByteData = await rootBundle.load(path);
@@ -45,7 +44,7 @@ class _MainPageState extends ConsumerState {
     return (await codec.getNextFrame()).image;
   }
 
-  Offset getRelativeMousePosition(Offset mousePosition, double workingArea) =>
+  Offset getRelativeMousePosition(Offset mousePosition) =>
       mousePosition / workingArea * 100;
 
   String pinPositionToString(double workingArea) {
@@ -53,10 +52,7 @@ class _MainPageState extends ConsumerState {
       return 'Please click where you want your robot';
     }
 
-    var relativePosition = getRelativeMousePosition(
-      robotPinPosition!,
-      workingArea,
-    );
+    var relativePosition = getRelativeMousePosition(robotPinPosition!);
     return 'x: ${relativePosition.dx.toStringAsFixed(2)}, y: ${relativePosition.dy.toStringAsFixed(2)}';
   }
 
@@ -70,7 +66,7 @@ class _MainPageState extends ConsumerState {
     }
 
     var screenH = MediaQuery.of(context).size.height;
-    var workingArea = screenH;
+    workingArea = screenH;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -78,160 +74,11 @@ class _MainPageState extends ConsumerState {
         Expanded(
           child: Padding(
             padding: EdgeInsets.all(32),
-            child:
-                currentRobotStateProvider == null
-                    ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Initial position: ${pinPositionToString(workingArea)}',
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Initial robot speed: ${(initialSpeed * 200).toStringAsFixed(2)}',
-                        ),
-                        const SizedBox(height: 8),
-                        Slider(
-                          padding: EdgeInsets.zero,
-                          value: initialSpeed,
-                          onChanged: (v) => setState(() => initialSpeed = v),
-                        ),
-
-                        Spacer(),
-                        Center(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              currentRobotStateProvider = robotProvider(
-                                defaultSpeed: initialSpeed * 200,
-                                defaultPosition:
-                                    robotPinPosition == null
-                                        ? null
-                                        : getRelativeMousePosition(
-                                          robotPinPosition!,
-                                          workingArea,
-                                        ),
-                              );
-                              ref
-                                  .read(currentRobotStateProvider!.notifier)
-                                  .sendCommand(RobotCommandStart());
-
-                              robotPinPosition = null;
-
-                              setState(
-                                () => inputState = MainPageStateMachine.ready,
-                              );
-                            },
-                            child: Text('Create robot'),
-                          ),
-                        ),
-                      ],
-                    )
-                    : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Robot speed: ${robotState?.speed.toStringAsFixed(2)}',
-                        ),
-                        Slider(
-                          padding: EdgeInsets.zero,
-                          value: (robotState?.speed ?? 0) / 200,
-                          onChanged: (v) {
-                            ref
-                                .read(currentRobotStateProvider!.notifier)
-                                .sendCommand(
-                                  RobotCommandChangeSpeed(value: v * 200),
-                                );
-                          },
-                        ),
-                        const SizedBox(height: 32),
-
-                        //TODO: move to separate widget
-                        Text('Robot temperature: ${robotState?.temperature}°'),
-                        Stack(
-                          children: [
-                            Container(
-                              height: 30,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    const Color(0xff4AC9F5),
-                                    const Color(0xffF6FCFE),
-                                    const Color(0xffFCE276),
-                                    const Color(0xffF9681C),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            if (robotState != null)
-                              SliderTheme(
-                                data: SliderThemeData(
-                                  trackHeight: 0,
-                                  activeTrackColor: Colors.transparent,
-                                  inactiveTrackColor: Colors.transparent,
-                                  thumbShape: SquareSliderThumbShape(),
-                                  overlayShape: SliderComponentShape.noOverlay,
-                                ),
-                                child: Slider(
-                                  value: robotState!.temperature / 100,
-                                  onChanged: (v) {},
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-                        RichText(
-                          text: TextSpan(
-                            text: 'Robot status: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                            children: [
-                              TextSpan(
-                                text:
-                                    (robotState?.isActive ?? false)
-                                        ? 'Working'
-                                        : 'Inactive',
-                                style: TextStyle(
-                                  color:
-                                      robotState != null
-                                          ? (robotState!.isActive
-                                              ? Colors.green
-                                              : Colors.red)
-                                          : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Spacer(),
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              onPressed:
-                                  () => ref
-                                      .read(currentRobotStateProvider!.notifier)
-                                      .sendCommand(RobotCommandStop()),
-                              child: Text('Stop'),
-                            ),
-                            Spacer(),
-                            ElevatedButton(
-                              onPressed:
-                                  () => ref
-                                      .read(currentRobotStateProvider!.notifier)
-                                      .sendCommand(RobotCommandStart()),
-                              child: Text('Start'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+            child: _controllingPanel(),
           ),
         ),
         GestureDetector(
-          onTap: () {
-            if (inputState == MainPageStateMachine.waitingForUserOptions) {
-              setState(() => robotPinPosition = mousePosition);
-            }
-          },
+          onTap: () => setState(() => robotPinPosition = mousePosition),
           child: Stack(
             children: [
               FutureBuilder(
@@ -245,7 +92,7 @@ class _MainPageState extends ConsumerState {
                               height: screenH,
                               child: CustomPaint(
                                 size: Size(screenH, screenH),
-                                painter: GridPainter(
+                                painter: RobotStateDrawer(
                                   robotState: robotState,
                                   tankImage: data.data,
                                   oldPosition: oldPosition,
@@ -257,21 +104,14 @@ class _MainPageState extends ConsumerState {
                 Positioned(
                   bottom: mousePosition!.dy,
                   left: mousePosition!.dx,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.black),
-                    ),
-                    padding: EdgeInsets.all(8),
-                    child: Text(
-                      'x: ${(mousePosition!.dx / workingArea * 100).toStringAsFixed(2)}\ny: ${(mousePosition!.dy / workingArea * 100).toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+                  child: ContextTooltip(
+                    text:
+                        'x: ${(mousePosition!.dx / workingArea * 100).toStringAsFixed(2)}\n'
+                        'y: ${(mousePosition!.dy / workingArea * 100).toStringAsFixed(2)}',
                   ),
                 ),
-              if (robotPinPosition != null)
+              if (robotPinPosition != null &&
+                  inputState == MainPageStateMachine.waitingForUserOptions)
                 Positioned(
                   bottom: robotPinPosition!.dy - 8,
                   left: robotPinPosition!.dx - 8,
@@ -286,23 +126,18 @@ class _MainPageState extends ConsumerState {
                   ),
                 ),
               Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.red),
-                  ),
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.precise,
-                    onExit: (e) => setState(() => mousePosition = null),
-                    onHover: (hover) {
-                      setState(
-                        () =>
-                            mousePosition = Offset(
-                              hover.localPosition.dx,
-                              screenH - hover.localPosition.dy,
-                            ),
-                      );
-                    },
-                  ),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.precise,
+                  onExit: (e) => setState(() => mousePosition = null),
+                  onHover: (hover) {
+                    setState(
+                      () =>
+                          mousePosition = Offset(
+                            hover.localPosition.dx,
+                            screenH - hover.localPosition.dy,
+                          ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -312,143 +147,109 @@ class _MainPageState extends ConsumerState {
       ],
     );
   }
-}
 
-class GridPainter extends CustomPainter {
-  final RobotState? robotState;
-  final ui.Image? tankImage;
-  final Offset? oldPosition;
+  Widget _controllingPanel() =>
+      currentRobotStateProvider == null
+          ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Initial position: ${pinPositionToString(workingArea)}'),
+              const SizedBox(height: 16),
+              Text(
+                'Initial robot speed: ${(initialSpeed * 200).toStringAsFixed(2)}',
+              ),
+              const SizedBox(height: 8),
+              Slider(
+                padding: EdgeInsets.zero,
+                value: initialSpeed,
+                onChanged: (v) => setState(() => initialSpeed = v),
+              ),
+              Spacer(),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () => createRobot(),
+                  child: Text('Create robot'),
+                ),
+              ),
+            ],
+          )
+          : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Robot speed: ${robotState?.speed.toStringAsFixed(2)}'),
+              Slider(
+                padding: EdgeInsets.zero,
+                value: (robotState?.speed ?? 0) / 200,
+                onChanged: (v) => setSpeed(v * 200),
+              ),
+              const SizedBox(height: 32),
+              Text('Robot temperature: ${robotState?.temperature}°'),
+              TemperatureIndicator(temperature: robotState?.temperature),
+              const SizedBox(height: 32),
+              RichText(
+                text: TextSpan(
+                  text: 'Robot status: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                  children: [
+                    TextSpan(
+                      text:
+                          (robotState?.isActive ?? false)
+                              ? 'Working'
+                              : 'Inactive',
+                      style: TextStyle(
+                        color:
+                            robotState != null
+                                ? (robotState!.isActive
+                                    ? Colors.green
+                                    : Colors.red)
+                                : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Spacer(),
+              Row(
+                children: [
+                  ElevatedButton(onPressed: () => stop(), child: Text('Stop')),
+                  Spacer(),
+                  ElevatedButton(
+                    onPressed: () => start(),
+                    child: Text('Start'),
+                  ),
+                ],
+              ),
+            ],
+          );
 
-  GridPainter({
-    required this.robotState,
-    required this.tankImage,
-    required this.oldPosition,
-  });
+  void setSpeed(double v) => ref
+      .read(currentRobotStateProvider!.notifier)
+      .sendCommand(RobotCommandChangeSpeed(value: v));
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    const int rows = 10;
-    const int columns = 10;
-    final double cellSize = (size.width / columns).clamp(
-      0.0,
-      size.height / rows,
+  void start() => ref
+      .read(currentRobotStateProvider!.notifier)
+      .sendCommand(RobotCommandStart());
+
+  void stop() => ref
+      .read(currentRobotStateProvider!.notifier)
+      .sendCommand(RobotCommandStop());
+
+  void createRobot() {
+    currentRobotStateProvider = robotProvider(
+      defaultSpeed: initialSpeed * 200,
+      defaultPosition:
+          robotPinPosition == null
+              ? null
+              : getRelativeMousePosition(robotPinPosition!),
     );
+    ref
+        .read(currentRobotStateProvider!.notifier)
+        .sendCommand(RobotCommandStart());
 
-    final Paint gridPaint =
-        Paint()
-          ..color = Colors.grey
-          ..strokeWidth = 1.0;
+    robotPinPosition = null;
 
-    for (int i = 1; i <= rows; i++) {
-      double y = i * cellSize;
-      canvas.drawLine(Offset(0, y), Offset(cellSize * columns, y), gridPaint);
-    }
-
-    for (int j = 1; j <= columns; j++) {
-      double x = j * cellSize;
-      canvas.drawLine(Offset(x, 0), Offset(x, cellSize * rows), gridPaint);
-    }
-
-    if (robotState != null) {
-      var robotSize = Offset(50, 50);
-      var robotLocation = Offset(
-        robotState!.position.dx / 100 * size.height,
-        size.height - robotState!.position.dy / 100 * size.height,
-      );
-
-      canvas.save();
-
-      if (oldPosition != null) {
-        var dx = robotState!.position.dx - oldPosition!.dx;
-        var dy = robotState!.position.dy - oldPosition!.dy;
-
-        var angle = 3.141 - atan2(dy, dx) + 1.5708;
-
-        canvas.drawImage(
-          rotatedImage(image: tankImage!, angle: angle),
-          Offset(
-            robotLocation.dx - robotSize.dx / 2,
-            robotLocation.dy - robotSize.dy / 2,
-          ),
-          Paint()..color = Colors.black,
-        );
-      }
-
-      canvas.translate(-size.width / 2, -size.height / 2);
-
-      canvas.restore();
-
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: robotLocation - Offset(0, 35),
-          width: robotState!.battery * 0.6,
-          height: 10,
-        ),
-        Paint()
-          ..color =
-              Color.lerp(Colors.red, Colors.green, robotState!.battery / 100)!,
-      );
-    }
-  }
-
-  ui.Image rotatedImage({required ui.Image image, required double angle}) {
-    var pictureRecorder = ui.PictureRecorder();
-    Canvas canvas = Canvas(pictureRecorder);
-
-    final double r =
-        sqrt(image.width * image.width + image.height * image.height) / 2;
-    final alpha = atan(image.height / image.width);
-    final gama = alpha + angle;
-    final shiftY = r * sin(gama);
-    final shiftX = r * cos(gama);
-    final translateX = image.width / 2 - shiftX;
-    final translateY = image.height / 2 - shiftY;
-    canvas.translate(translateX, translateY);
-    canvas.rotate(angle);
-    canvas.drawImage(image, Offset.zero, Paint());
-
-    return pictureRecorder.endRecording().toImageSync(
-      image.width + 30,
-      image.height + 30,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
+    setState(() => inputState = MainPageStateMachine.ready);
   }
 }
 
 enum MainPageStateMachine { waitingForUserOptions, ready }
-
-class SquareSliderThumbShape extends SliderComponentShape {
-  @override
-  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size(20, 20); // Size of the square thumb
-  }
-
-  @override
-  void paint(
-    PaintingContext context,
-    Offset center, {
-    required Animation<double> activationAnimation,
-    required Animation<double> enableAnimation,
-    required bool isDiscrete,
-    required TextPainter labelPainter,
-    required RenderBox parentBox,
-    required SliderThemeData sliderTheme,
-    required TextDirection textDirection,
-    required double value,
-    required double textScaleFactor,
-    required Size sizeWithOverflow,
-  }) {
-    final Canvas canvas = context.canvas;
-    final Paint paint = Paint()..color = Colors.black; // Thumb color
-
-    // Draw square thumb
-    canvas.drawRect(
-      Rect.fromLTWH(center.dx, center.dy - 10, 4, 30), // Position and size
-      paint,
-    );
-  }
-}
