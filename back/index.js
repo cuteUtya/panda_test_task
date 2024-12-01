@@ -43,6 +43,10 @@ let sessions = {};
 
 // Function to create custom robot session 
 app.post('/robot/create', (request, responce) => {
+    responce.header('Access-Control-Allow-Origin', '*');
+    responce.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    responce.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
     bodyParser.raw({ type: "application/json" });
     const {
         position,
