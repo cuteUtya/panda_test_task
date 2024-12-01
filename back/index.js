@@ -5,8 +5,8 @@ const uuidv4 = require("uuid").v4;
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
 app.use(express.static("public"));
+app.use(cors());
 expressWs(app);
 app.use(bodyParser.json());
 
