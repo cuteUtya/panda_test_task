@@ -24,6 +24,7 @@ class _MainPageState extends ConsumerState {
 
   Offset? mousePosition;
   Offset? robotPinPosition;
+  Offset? previoueRobotPosition;
 
   StateNotifierProvider<RobotController, RobotState?>?
   currentRobotStateProvider;
@@ -64,8 +65,6 @@ class _MainPageState extends ConsumerState {
 
   @override
   Widget build(BuildContext context) {
-    Offset? previoueRobotPosition;
-
     if (currentRobotStateProvider != null) {
       ref.listen(currentRobotStateProvider!, (oldState, newState) {
         previoueRobotPosition = oldState?.position;
