@@ -1,8 +1,6 @@
 import 'dart:math';
 import 'dart:ui' as ui;
-import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:panda_test_task/robot/Data/Model/robot_state.dart';
 
@@ -36,7 +34,7 @@ class RobotStateDrawer extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(cellSize * columns, y), gridPaint);
     }
 
-    //left border
+    //left borders
     canvas.drawLine(Offset(0, 0), Offset(0, cellSize * rows), gridPaint);
     for (int j = 1; j <= columns; j++) {
       double x = j * cellSize;

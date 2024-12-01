@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class TemperatureIndicator extends StatelessWidget {
@@ -43,7 +42,7 @@ class TemperatureIndicator extends StatelessWidget {
 class SquareSliderThumbShape extends SliderComponentShape {
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
-    return Size(20, 20); // Size of the square thumb
+    return Size(4, 30);
   }
 
   @override
@@ -62,12 +61,8 @@ class SquareSliderThumbShape extends SliderComponentShape {
     required Size sizeWithOverflow,
   }) {
     final Canvas canvas = context.canvas;
-    final Paint paint = Paint()..color = Colors.black; // Thumb color
+    final Paint paint = Paint()..color = Colors.black;
 
-    // Draw square thumb
-    canvas.drawRect(
-      Rect.fromLTWH(center.dx, center.dy - 10, 4, 30), // Position and size
-      paint,
-    );
+    canvas.drawRect(Rect.fromLTWH(center.dx, center.dy - 10, 4, 30), paint);
   }
 }

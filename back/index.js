@@ -150,7 +150,6 @@ app.ws('/robot/status', (ws) => {
     ws.on('message', (message) => {
         try {
             const command = JSON.parse(message);
-            console.log(command);
 
             if (command.type != 'robot_init' && !inited) {
                 return;
