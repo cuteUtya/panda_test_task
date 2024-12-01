@@ -2,8 +2,10 @@ const express = require('express');
 const expressWs = require('express-ws');
 const bodyParser = require('body-parser');
 const uuidv4 = require("uuid").v4;
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
 expressWs(app);
 app.use(bodyParser.json());
 
