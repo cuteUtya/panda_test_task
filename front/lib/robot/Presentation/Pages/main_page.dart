@@ -33,6 +33,8 @@ class _MainPageState extends ConsumerState {
   double initialSpeed = 0;
   double workingArea = 0;
 
+  late final tankImage = _load('images/tank_green.png');
+
   Future<ui.Image> _load(String path) async {
     final ByteData assetImageByteData = await rootBundle.load(path);
     final codec = await ui.instantiateImageCodec(
@@ -90,7 +92,7 @@ class _MainPageState extends ConsumerState {
             child: Stack(
               children: [
                 FutureBuilder(
-                  future: _load('assets/images/tank_green.png'),
+                  future: tankImage,
                   builder:
                       (_, data) =>
                           !data.hasData
