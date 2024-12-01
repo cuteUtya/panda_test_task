@@ -27,3 +27,6 @@ Datasource
 Providers 
 - `RobotProvider`: A `StateNotifier` from `flutter_riverpod` to manage and expose the robot's state
 
+Pages
+Main page that utilizes RobotProvider and provides business logic to the UI.
+
