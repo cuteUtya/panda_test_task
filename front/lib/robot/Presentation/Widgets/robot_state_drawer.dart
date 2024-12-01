@@ -36,11 +36,13 @@ class RobotStateDrawer extends CustomPainter {
 
     //left borders
     canvas.drawLine(Offset(0, 0), Offset(0, cellSize * rows), gridPaint);
+    //draw horizontal lines
     for (int j = 1; j <= columns; j++) {
       double x = j * cellSize;
       canvas.drawLine(Offset(x, 0), Offset(x, cellSize * rows), gridPaint);
     }
 
+    //draw vertical lines
     if (robotState != null) {
       var robotSize = Offset(50, 50);
       var robotLocation = Offset(
@@ -50,10 +52,13 @@ class RobotStateDrawer extends CustomPainter {
 
       canvas.save();
 
+      //we can draw robot if we know his vector
       if (oldPosition != null) {
         var dx = robotState!.position.dx - oldPosition!.dx;
         var dy = robotState!.position.dy - oldPosition!.dy;
 
+        //calculating angle beetwen previous and current position
+        //and adjusting it for current model
         var angle = 3.141 - atan2(dy, dx) + 1.5708;
 
         canvas.drawImage(
@@ -70,6 +75,7 @@ class RobotStateDrawer extends CustomPainter {
 
       canvas.restore();
 
+      //draw battery indicator
       canvas.drawRect(
         Rect.fromCenter(
           center: robotLocation - Offset(0, 35),
@@ -83,6 +89,7 @@ class RobotStateDrawer extends CustomPainter {
     }
   }
 
+  //function to rotate image from center
   ui.Image rotatedImage({required ui.Image image, required double angle}) {
     var pictureRecorder = ui.PictureRecorder();
     Canvas canvas = Canvas(pictureRecorder);
