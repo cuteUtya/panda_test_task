@@ -56407,7 +56407,7 @@ $S:381}
 A.B5.prototype={
 av(){return new A.GB(B.o7)}}
 A.GB.prototype={
-aJ(){this.kO("images/tank_green.png").aT(new A.a38(this),t.H)
+aJ(){this.kO("assets/images/tank_green.png").aT(new A.a38(this),t.H)
 this.bg()},
 kO(a){return this.SO(a)},
 SO(a){var s=0,r=A.L(t.lu),q,p,o,n
