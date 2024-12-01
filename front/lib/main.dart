@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:panda_test_task/robot/Presentation/Pages/main_page.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(ProviderScope(child: const MyApp()));
 }
 

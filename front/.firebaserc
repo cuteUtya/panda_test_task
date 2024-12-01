@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "oont-19df0"
+  },
+  "targets": {
+    "oont-19df0": {
+      "hosting": {
+        "test-app-834eb": [
+          "firebase.json"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

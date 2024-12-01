@@ -90,7 +90,7 @@ class _MainPageState extends ConsumerState {
             child: Stack(
               children: [
                 FutureBuilder(
-                  future: _load('images/tank_green.png'),
+                  future: _load('assets/images/tank_green.png'),
                   builder:
                       (_, data) =>
                           !data.hasData
