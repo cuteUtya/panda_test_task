@@ -22,13 +22,16 @@ class _MainPageState extends ConsumerState {
 
   Offset? oldPosition;
 
-  var r = robotProvider();
+  MainPageStateMachine inputState = MainPageStateMachine.waitingForUserOptions;
+
+  StateNotifierProvider<RobotController, RobotState?>?
+  currentRobotStateProvider;
   RobotState? robotState;
+
+  double initialSpeed = 0;
 
   @override
   void initState() {
-    ref.read(r.notifier).sendCommand(RobotCommandStart());
-    ref.read(r.notifier).sendCommand(RobotCommandChangeSpeed(value: 10));
     super.initState();
   }
 
@@ -42,12 +45,29 @@ class _MainPageState extends ConsumerState {
     return (await codec.getNextFrame()).image;
   }
 
+  Offset getRelativeMousePosition(Offset mousePosition, double workingArea) =>
+      mousePosition / workingArea * 100;
+
+  String pinPositionToString(double workingArea) {
+    if (robotPinPosition == null) {
+      return 'Please click where you want your robot';
+    }
+
+    var relativePosition = getRelativeMousePosition(
+      robotPinPosition!,
+      workingArea,
+    );
+    return 'x: ${relativePosition.dx.toStringAsFixed(2)}, y: ${relativePosition.dy.toStringAsFixed(2)}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    ref.listen(r, (oldState, newState) {
-      oldPosition = oldState?.position;
-      setState(() => robotState = newState);
-    });
+    if (currentRobotStateProvider != null) {
+      ref.listen(currentRobotStateProvider!, (oldState, newState) {
+        oldPosition = oldState?.position;
+        setState(() => robotState = newState);
+      });
+    }
 
     var screenH = MediaQuery.of(context).size.height;
     var workingArea = screenH;
@@ -58,105 +78,159 @@ class _MainPageState extends ConsumerState {
         Expanded(
           child: Padding(
             padding: EdgeInsets.all(32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Robot speed: ${robotState?.speed.toStringAsFixed(2)}'),
-                Slider(
-                  padding: EdgeInsets.zero,
-                  value: (robotState?.speed ?? 0) / 200,
-                  onChanged: (v) {
-                    ref
-                        .read(r.notifier)
-                        .sendCommand(RobotCommandChangeSpeed(value: v * 200));
-                  },
-                ),
-                const SizedBox(height: 32),
+            child:
+                currentRobotStateProvider == null
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Initial position: ${pinPositionToString(workingArea)}',
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Initial robot speed: ${(initialSpeed * 200).toStringAsFixed(2)}',
+                        ),
+                        const SizedBox(height: 8),
+                        Slider(
+                          padding: EdgeInsets.zero,
+                          value: initialSpeed,
+                          onChanged: (v) => setState(() => initialSpeed = v),
+                        ),
 
-                //TODO: move to separate widget
-                Text('Robot temperature: ${robotState?.temperature}°'),
-                Stack(
-                  children: [
-                    Container(
-                      height: 30,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xff4AC9F5),
-                            const Color(0xffF6FCFE),
-                            const Color(0xffFCE276),
-                            const Color(0xffF9681C),
+                        Spacer(),
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              currentRobotStateProvider = robotProvider(
+                                defaultSpeed: initialSpeed * 200,
+                                defaultPosition:
+                                    robotPinPosition == null
+                                        ? null
+                                        : getRelativeMousePosition(
+                                          robotPinPosition!,
+                                          workingArea,
+                                        ),
+                              );
+                              ref
+                                  .read(currentRobotStateProvider!.notifier)
+                                  .sendCommand(RobotCommandStart());
+
+                              robotPinPosition = null;
+
+                              setState(
+                                () => inputState = MainPageStateMachine.ready,
+                              );
+                            },
+                            child: Text('Create robot'),
+                          ),
+                        ),
+                      ],
+                    )
+                    : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Robot speed: ${robotState?.speed.toStringAsFixed(2)}',
+                        ),
+                        Slider(
+                          padding: EdgeInsets.zero,
+                          value: (robotState?.speed ?? 0) / 200,
+                          onChanged: (v) {
+                            ref
+                                .read(currentRobotStateProvider!.notifier)
+                                .sendCommand(
+                                  RobotCommandChangeSpeed(value: v * 200),
+                                );
+                          },
+                        ),
+                        const SizedBox(height: 32),
+
+                        //TODO: move to separate widget
+                        Text('Robot temperature: ${robotState?.temperature}°'),
+                        Stack(
+                          children: [
+                            Container(
+                              height: 30,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xff4AC9F5),
+                                    const Color(0xffF6FCFE),
+                                    const Color(0xffFCE276),
+                                    const Color(0xffF9681C),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (robotState != null)
+                              SliderTheme(
+                                data: SliderThemeData(
+                                  trackHeight: 0,
+                                  activeTrackColor: Colors.transparent,
+                                  inactiveTrackColor: Colors.transparent,
+                                  thumbShape: SquareSliderThumbShape(),
+                                  overlayShape: SliderComponentShape.noOverlay,
+                                ),
+                                child: Slider(
+                                  value: robotState!.temperature / 100,
+                                  onChanged: (v) {},
+                                ),
+                              ),
                           ],
                         ),
-                      ),
-                    ),
-                    if (robotState != null)
-                      SliderTheme(
-                        data: SliderThemeData(
-                          trackHeight: 0,
-                          activeTrackColor: Colors.transparent,
-                          inactiveTrackColor: Colors.transparent,
-                          thumbShape: SquareSliderThumbShape(),
-                          overlayShape: SliderComponentShape.noOverlay,
+                        const SizedBox(height: 32),
+                        RichText(
+                          text: TextSpan(
+                            text: 'Robot status: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                            children: [
+                              TextSpan(
+                                text:
+                                    (robotState?.isActive ?? false)
+                                        ? 'Working'
+                                        : 'Inactive',
+                                style: TextStyle(
+                                  color:
+                                      robotState != null
+                                          ? (robotState!.isActive
+                                              ? Colors.green
+                                              : Colors.red)
+                                          : null,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Slider(
-                          value: robotState!.temperature / 100,
-                          onChanged: (v) {},
+                        Spacer(),
+                        Row(
+                          children: [
+                            ElevatedButton(
+                              onPressed:
+                                  () => ref
+                                      .read(currentRobotStateProvider!.notifier)
+                                      .sendCommand(RobotCommandStop()),
+                              child: Text('Stop'),
+                            ),
+                            Spacer(),
+                            ElevatedButton(
+                              onPressed:
+                                  () => ref
+                                      .read(currentRobotStateProvider!.notifier)
+                                      .sendCommand(RobotCommandStart()),
+                              child: Text('Start'),
+                            ),
+                          ],
                         ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                RichText(
-                  text: TextSpan(
-                    text: 'Robot status: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                    children: [
-                      TextSpan(
-                        text:
-                            (robotState?.isActive ?? false)
-                                ? 'Working'
-                                : 'Inactive',
-                        style: TextStyle(
-                          color:
-                              robotState != null
-                                  ? (robotState!.isActive
-                                      ? Colors.green
-                                      : Colors.red)
-                                  : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Spacer(),
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed:
-                          () => ref
-                              .read(r.notifier)
-                              .sendCommand(RobotCommandStop()),
-                      child: Text('Stop'),
+                      ],
                     ),
-                    Spacer(),
-                    ElevatedButton(
-                      onPressed:
-                          () => ref
-                              .read(r.notifier)
-                              .sendCommand(RobotCommandStart()),
-                      child: Text('Start'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
         ),
         GestureDetector(
           onTap: () {
-            setState(() => robotPinPosition = mousePosition);
+            if (inputState == MainPageStateMachine.waitingForUserOptions) {
+              setState(() => robotPinPosition = mousePosition);
+            }
           },
           child: Stack(
             children: [
@@ -199,8 +273,8 @@ class _MainPageState extends ConsumerState {
                 ),
               if (robotPinPosition != null)
                 Positioned(
-                  bottom: robotPinPosition!.dy,
-                  left: robotPinPosition!.dx,
+                  bottom: robotPinPosition!.dy - 8,
+                  left: robotPinPosition!.dx - 8,
                   child: Container(
                     height: 16,
                     width: 16,
